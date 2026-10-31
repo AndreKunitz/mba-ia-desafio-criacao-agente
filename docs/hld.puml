@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Container>
+Person(morador, "Morador / Avaliador", "curl ou app")
+System_Boundary(aurora, "Assistente Aurora (container Docker)") {
+  Container(api, "API FastAPI", "Python 3.12", "Rotas do contrato; traduz confirmações")
+  Container(runner, "ADK Runner + App", "google-adk 2.x", "Executa agentes e persiste eventos")
+  Container(agentes, "Agentes", "ADK", "aurora (principal) + especialistas")
+  Container(tools, "Tools + Repositório", "Python", "Única porta de acesso aos dados; regras no código")
+  ContainerDb(dbs, "sessoes.db", "SQLite", "Sessões, eventos, state")
+  ContainerDb(dbc, "condominio.db", "SQLite", "Reservas, visitantes, códigos")
+  Container(reg, "regulamento.md", "arquivo", "Lido por capítulo")
+}
+System_Ext(gemini, "Gemini API", "Google AI Studio")
+Rel(morador, api, "HTTP/JSON")
+Rel(api, runner, "run_async()")
+Rel(runner, agentes, "")
+Rel(agentes, gemini, "")
+Rel(agentes, tools, "function calls")
+Rel(runner, dbs, "DatabaseSessionService")
+Rel(tools, dbc, "SQL com UNIQUE")
+Rel(tools, reg, "lê 1 capítulo")
+@enduml

@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - estado:/app/estado   # sessoes.db e condominio.db sobrevivem ao reinício
+      - ./aurora:/app/aurora # código ao vivo (desenvolvimento)
+      - ./dados:/app/dados:ro
+
+volumes:
+  estado:
