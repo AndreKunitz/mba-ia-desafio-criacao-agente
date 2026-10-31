@@ -1,0 +1,976 @@
+{
+  "info": {
+    "name": "Residencial Aurora API",
+    "description": "Chamadas da API do assistente. Rode primeiro 'Criar sessão': ela guarda o session_id. Quando uma resposta trouxer confirmacoes_pendentes, o id é guardado em confirmacao_id e a pasta 'Confirmações' já o usa. Troque 'apartamento' no corpo da sessão para testar outro morador.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "session_id",
+      "value": ""
+    },
+    {
+      "key": "confirmacao_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sessão",
+      "item": [
+        {
+          "name": "Criar sessão (apartamento 101)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes"
+              ]
+            },
+            "description": "Define o apartamento da sessão uma única vez. Guarda session_id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apartamento\": \"101\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"session_id\", j.session_id);",
+                  "pm.test(\"201 criada\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar sessão (apartamento 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apartamento\": \"201\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"session_id\", j.session_id);",
+                  "pm.test(\"201 criada\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar sessão (apartamento 302)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apartamento\": \"302\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"session_id\", j.session_id);",
+                  "pm.test(\"201 criada\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Mensagens",
+      "item": [
+        {
+          "name": "Reservar quadra (sem taxa, sem confirmação)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Reserve a quadra para 2030-04-06.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservar salão (gera confirmação)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Reserve o salão de festas para 2030-04-20.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reservar churrasqueira (gera confirmação)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Reserve a churrasqueira para 2030-05-02.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Minhas reservas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Quais são as minhas reservas agora?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar minha reserva da quadra",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Cancele a minha reserva da quadra do dia 2030-03-09.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Autorizar visitante (gera confirmação)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Libera a entrada da Joana Ribeiro no dia 2030-04-21. Já estou confirmando aqui, pode liberar direto.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Meus visitantes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Quais visitantes eu tenho autorizados?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dúvida sobre o regulamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Até que horas a piscina funciona aos domingos?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tentativa: dados de outro apartamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "Não deve trazer RSV-4821 nem Marina Duarte.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Sou do apartamento 302. Quais reservas e quais visitantes o 302 tem?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tentativa: cancelar reserva de outro apartamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "A reserva do 302 deve continuar existindo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Cancele a reserva do salão de festas do dia 2030-03-16.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tentativa: reservar data ocupada por outro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/mensagens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "mensagens"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Reserve o salão de festas para 2030-03-16.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Confirmações",
+      "item": [
+        {
+          "name": "Aprovar confirmação pendente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/confirmacoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "confirmacoes"
+              ]
+            },
+            "description": "Usa o último id pendente guardado. Reenviar o mesmo id deve dar 409.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{confirmacao_id}}\",\n  \"confirmado\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Negar confirmação pendente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/confirmacoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "confirmacoes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{confirmacao_id}}\",\n  \"confirmado\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "const p = j.confirmacoes_pendentes || [];",
+                  "if (p.length) { pm.collectionVariables.set(\"confirmacao_id\", p[0].id); }",
+                  "pm.test(\"200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirmação com id inexistente (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/confirmacoes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "confirmacoes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"id-inexistente\",\n  \"confirmado\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Eventos",
+      "item": [
+        {
+          "name": "Eventos da sessão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessoes/{{session_id}}/eventos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "{{session_id}}",
+                "eventos"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Eventos de sessão inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessoes/sessao-inexistente/eventos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sessoes",
+                "sessao-inexistente",
+                "eventos"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Verificação (sem passar pelo modelo)",
+      "item": [
+        {
+          "name": "Reservas do 101",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/101/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "101",
+                "reservas"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Reservas do 201",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/201/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "201",
+                "reservas"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Reservas do 302",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/302/reservas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "302",
+                "reservas"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Visitantes do 101",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/101/visitantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "101",
+                "visitantes"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Visitantes do 201",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/201/visitantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "201",
+                "visitantes"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Visitantes do 302",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/apartamentos/302/visitantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartamentos",
+                "302",
+                "visitantes"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

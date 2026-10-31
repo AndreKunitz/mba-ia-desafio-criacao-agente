@@ -1,0 +1,37 @@
+@startuml
+title Reserva com cobrança: confirmação fora da conversa
+
+actor Morador
+participant API
+participant Runner
+participant "aurora\n(principal)" as Aurora
+participant reservas_agent
+participant "tool reservar" as Tool
+database SQLite
+
+Morador -> API: POST /sessoes {apartamento: "101"}
+API -> Runner: cria sessão, state.apartamento = "101" (única vez)
+API --> Morador: 201 {session_id}
+
+Morador -> API: POST /mensagens "Reserve o salão 2030-04-20"
+API -> Runner: run_async(mensagem)
+Runner -> Aurora: executa
+Aurora -> reservas_agent: transfere
+reservas_agent -> Tool: reservar(area, data)
+note right of Tool: sem parâmetro apartamento;\nvem do state da sessão
+Tool --> Runner: pede confirmação (taxa > 0)\nNADA gravado
+Runner --> API: eventos com adk_request_confirmation
+API --> Morador: {resposta: "", confirmacoes_pendentes: [{id, ...}]}
+
+Morador -> API: POST /confirmacoes {id, confirmado: true}
+alt id não está pendente nesta sessão
+  API --> Morador: 409
+else id pendente
+  API -> Runner: run_async(FunctionResponse da confirmação)
+  Runner -> Tool: executa UMA vez
+  Tool -> SQLite: INSERT (índice único area+data, reservas ativas)
+  note right of SQLite: conflito -> IntegrityError ->\n"data indisponível" (resposta normal, 200)
+  Runner --> API: resposta final
+  API --> Morador: 200 {resposta, confirmacoes_pendentes: []}
+end
+@enduml
